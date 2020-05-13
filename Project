@@ -1,0 +1,14 @@
+public_name: timecount
+interal_name: timecount
+version: 0.0.0
+license: Apache 2.0
+author: Felix Meyer-Wolters
+author_email: felix@meyerwolters.de
+maintainer: Felix Meyer-Wolters
+maintainer_email: felix@meyerwolters.de
+url: https://github.com/feluxe/timecount
+description: ''
+keywords:
+- time
+- count
+interpreter: python3.8
