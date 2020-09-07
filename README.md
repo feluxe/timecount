@@ -34,17 +34,17 @@ process(entries)
 Run `timelog.py` to view the results:
 
 ```bash
-#!/usr/bin/env bash
 python timelog.py
 ```
 
-You might want to create an executable script `~/bin/timelog` with the following content in order to conveniently print logging results:
+You might want to create an executable script `~/bin/timelog` with the following content in order to conveniently print logging results in your terminal:
 
 ```bash
+#!/usr/bin/env bash
 python /path/to/timelog.py
 ```
 
-You can now run `timelog` in your shell to see the logging output.
+You can now run `timelog` anywhere from your terminal.
 
 ## Example
 
