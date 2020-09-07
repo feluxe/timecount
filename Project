@@ -1,5 +1,5 @@
-public_name: timecount
-interal_name: timecount
+name: timecount
+slug: timecount
 version: 0.0.0
 license: Apache 2.0
 author: Felix Meyer-Wolters

@@ -11,7 +11,7 @@ with open("README.md") as f:
     long_description = f.read()
 
 setup(
-    name=config["public_name"],
+    name=config["slug"],
     version=config["version"],
     author=config["author"],
     author_email=config["author_email"],

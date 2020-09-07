@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import sys
 import datetime
 from datetime import timedelta
 from typing import List, Optional
@@ -9,8 +10,10 @@ WEEKS_PER_YEAR = 52.1429
 
 class C:
     GREY = "\033[37m"
+    GREY_DA = f"\x1b[38;2;{120};{120};{120}m"
     BLOCK = f"\x1b[38;2;{150};{130};{150}m"
     TIME = f"\x1b[38;2;{190};{140};{4}m"
+    OVER = f"\x1b[38;2;{252};{147};{4}m"
     DATE = f"\x1b[38;2;{150};{150};{150}m"
     MONTH_NUM = "\033[96m"
     WEEKNUM_DA = "\33[34m"
@@ -20,6 +23,9 @@ class C:
     HOLIDAY = f"\x1b[38;2;{70};{160};{70}m"
     VACADAY = f"\x1b[38;2;{30};{160};{160}m"
     SICKDAY = f"\x1b[38;2;{230};{120};{50}m"
+
+    ERROR = f"\x1b[38;2;{250};{100};{4}m"
+    ITALIC = "\33[3m"
 
     RS = "\033[0m"
 
@@ -40,6 +46,10 @@ def get_day_data(entries):
 
         if isinstance(block, str):
             msg += block
+            continue
+
+        if len(block) != 2:
+            print(f"{C.RED_TYPE}WARNING: Incomplete Time Block.{C.RS}")
             continue
 
         start_raw = str(f"{block[0]:.2f}").split(".")  # -> [10, 30]
@@ -63,10 +73,20 @@ def get_day_data(entries):
 
 
 def delta_to_time(delta):
-    days = delta.days * 24
-    hours = (delta.seconds // 3600) + days
-    minutes = (delta.seconds // 60) % 60
-    return f"{hours:02d}:{minutes:02d}"
+
+    total_seconds = int(delta.total_seconds())
+
+    if total_seconds >= 0:
+        hours = total_seconds // 3600
+        minutes = (total_seconds // 60) % 60
+        prefix = ""
+    else:
+        total_seconds = -1 * total_seconds
+        hours = total_seconds // 3600
+        minutes = (total_seconds // 60) % 60
+        prefix = "-"
+
+    return f"{prefix}{hours:02d}:{minutes:02d}"
 
 
 @dataclass
@@ -109,6 +129,8 @@ class State:
 
     contract_total_hours = timedelta(hours=0, minutes=0)
     contract_over_hours = timedelta(hours=0, minutes=0)
+
+    all_counted_dates = []
 
 
 def print_contract_result(entry: EmploymentContract):
@@ -164,7 +186,7 @@ def print_week_result(day: InternalDay, state: State) -> None:
     w = f"{col}W{day.week_number:02d}{C.RS}"
     m = f"{col}{day.month_name[0:3]}{C.RS}"
     t = f"{C.GREY}Total: {C.TIME}{delta_to_time(state.week_total_hours)}{C.RS}"
-    o = f"{C.GREY}Over: {C.TIME}{delta_to_time(state.week_over_hours)}{C.RS}"
+    o = f"{C.GREY}Over: {C.OVER}{delta_to_time(state.week_over_hours)}{C.RS}"
     print(f"{a} {w} {m} {t}{C.GREY} {o}")
 
 
@@ -173,30 +195,42 @@ def print_month_result(day: InternalDay, state: State) -> None:
     m = f"{C.MONTH_NUM}M{day.month_number:02d}{C.RS}"
     n = f"{C.MONTH_NUM}{day.month_name[0:3]}{C.RS}"
     t = f"{C.GREY}Total: {C.TIME}{delta_to_time(state.month_total_hours)}{C.RS}"
-    o = f"{C.GREY}Over: {C.TIME}{delta_to_time(state.month_over_hours)}{C.RS}"
+    o = f"{C.GREY}Over: {C.OVER}{delta_to_time(state.month_over_hours)}{C.RS}"
     print(f"{a} {m} {n} {t} {o}")
 
 
 def print_last_week_result(last_day: InternalDay, state: State):
+    n = (
+        f"\n{C.ITALIC}{C.GREY_DA}Note: \n"
+        + f"* We count over hours after each completed week.\n"
+        + f"  Over hours for current week should not be included in other stats.\n"
+        + f"* Holidays, VacationDays, etc. reduce the week target.{C.RS}\n"
+    )
     a = f"\n= After Week {last_day.week_number - 1} = \n"
     r = [
         f"{C.GREY}Vacation Left : {C.TIME}{state.vacation_days_left} d",
         f"{C.GREY}Contract Total: {C.TIME}{delta_to_time(state.contract_total_hours)} h",
-        f"{C.GREY}Contract Over : {C.TIME}{delta_to_time(state.contract_over_hours)} h",
+        f"{C.GREY}Contract Over : {C.OVER}{delta_to_time(state.contract_over_hours)} h",
         f"{C.GREY}Year Total    : {C.TIME}{delta_to_time(state.year_total_hours)} h",
-        f"{C.GREY}Year Over     : {C.TIME}{delta_to_time(state.year_over_hours)} h",
+        f"{C.GREY}Year Over     : {C.OVER}{delta_to_time(state.year_over_hours)} h",
         f"{C.GREY}Month Total   : {C.TIME}{delta_to_time(state.month_total_hours)} h",
-        f"{C.GREY}Month Over    : {C.TIME}{delta_to_time(state.month_over_hours)} h",
+        f"{C.GREY}Month Over    : {C.OVER}{delta_to_time(state.month_over_hours)} h",
     ]
     rr = "\n".join(r)
-    print(f"{a}{rr}")
+    print(f"{n}{a}{rr}")
 
 
 def print_current_week_result(last_day: InternalDay, state):
     a = f"\n{C.RS}= Current Week {last_day.week_number} =\n"
     b = f"{C.GREY}This Week Total: {C.TIME}{delta_to_time(state.week_total_hours)} h\n"
-    c = f"{C.GREY}This Week Over : {C.TIME}{delta_to_time(state.week_over_hours)} h"
+    c = f"{C.GREY}This Week Over : {C.OVER}{delta_to_time(state.week_over_hours)} h"
     print(f"{a}{b}{c}")
+
+
+def print_date_exists_error(date):
+    m = f"{C.ERROR}ERROR: Same date used multiple times: {date}{C.RS}"
+    print(m)
+    sys.exit(1)
 
 
 def process(entries: List[Entry]) -> None:
@@ -272,6 +306,12 @@ def process(entries: List[Entry]) -> None:
                 year_number=date.year,
             )
 
+            # Check if date exists
+            if cur_day.date in state.all_counted_dates:
+                print_date_exists_error(cur_day.date)
+            else:
+                state.all_counted_dates.append(cur_day.date)
+
             # On current day is new week
             if last_day and cur_day.week_number != last_day.week_number:
 
@@ -328,7 +368,6 @@ def process(entries: List[Entry]) -> None:
             state.contract_total_hours = (
                 state.contract_total_hours + cur_day.day_total_hours
             )
-
             state.week_over_hours = state.week_total_hours - state.week_target_hours
 
             last_day = cur_day
@@ -336,6 +375,3 @@ def process(entries: List[Entry]) -> None:
     if isinstance(last_day, InternalDay):
         print_last_week_result(last_day, state)
         print_current_week_result(last_day, state)
-
-
-print("Note: Over hours are counted after a week completes.\n")
