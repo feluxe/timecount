@@ -48,7 +48,7 @@ def get_day_data(values: Tuple[DayValues, ...]) -> Tuple[timedelta, str, str]:
             msg += block
             continue
 
-        if len(block) != 2:
+        if not isinstance(block, tuple) or len(block) != 2:
             print(f"{C.RED_TYPE}WARNING: Incomplete Time Block.{C.RS}")
             continue
 
