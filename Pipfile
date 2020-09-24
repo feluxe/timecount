@@ -4,8 +4,11 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+buildlib = "==3.0.0"
+docopt = "*"
 black = "*"
 mypy = "*"
+twine = "*"
 setuptools = "==41.0.1"
 
 [packages]

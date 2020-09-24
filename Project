@@ -1,6 +1,6 @@
 name: timecount
 slug: timecount
-version: 0.0.2
+version: 0.1.0
 license: Apache 2.0
 author: Felix Meyer-Wolters
 author_email: felix@meyerwolters.de
@@ -11,4 +11,3 @@ description: ''
 keywords:
 - time
 - count
-interpreter: python3.8
