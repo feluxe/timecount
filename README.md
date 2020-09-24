@@ -32,6 +32,7 @@ from timecount.tctypes import (
 
 # fmt: off
 entries = [
+
     EmploymentContract(begin="01-04-2020", hours_per_week=30, vacation_days_per_year=23),
     Balance(remove_vacation_days=7, note="Contract starts with April, thus remove 3 Month."),
     Balance(reduce_week_target_by_days=2, note="You need to balance for two work days here, because you start in the middle of the week."),
@@ -51,13 +52,14 @@ entries = [
 
     HoliDay("13-04-2020", (11.00, 16.00), "Ostermontag; Slack Channel Catchup; System Setup; Tooling"),
     Day("14-04-2020", (11.00, 14.00), (15.30, 18.30), "Tooling; SlackMeetings;"),
+
    # Continue with your logs ...
 ]
 
 process(entries)
 ```
 
-Now run `~/timelog` in your terminal to see the results:
+Now run `~/timelog` in your terminal to see the results.
 
 For convenience I suggest creating a symlink for the `timelog` file in your `~/bin` directory, so you can call `timelog` from anywhere in your terminal:
 
