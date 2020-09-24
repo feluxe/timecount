@@ -1,6 +1,8 @@
 from datetime import timedelta
 from dataclasses import dataclass
 
+from typing import Union, List, Tuple
+
 
 class Entry:
     pass
@@ -27,26 +29,29 @@ class Balance(Entry):
     note: str = ""
 
 
+DayValues = Union[Tuple[float, float], str]
+
+
 @dataclass
 class Day(Entry):
-    def __init__(self, date_str: str, *args):
+    def __init__(self, date_str: str, *values):
         self.date_str: str = date_str
-        self.args = args
+        self.values: Tuple[DayValues, ...] = values
 
 
 @dataclass
-class Holiday(Day):
-    def __init__(self, date_str, *args):
-        super().__init__(date_str, *args)
+class HoliDay(Day):
+    def __init__(self, date_str: str, *values: DayValues):
+        super().__init__(date_str, *values)
 
 
 @dataclass
 class SickDay(Day):
-    def __init__(self, date_str, *args):
-        super().__init__(date_str, *args)
+    def __init__(self, date_str: str, *values: DayValues):
+        super().__init__(date_str, *values)
 
 
 @dataclass
 class VacationDay(Day):
-    def __init__(self, date_str, *args):
-        super().__init__(date_str, *args)
+    def __init__(self, date_str: str, *values: DayValues):
+        super().__init__(date_str, *values)

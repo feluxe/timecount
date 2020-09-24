@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dc_field
 import sys
 import datetime
 from datetime import timedelta
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from .tctypes import *
 
 WEEKS_PER_YEAR = 52.1429
@@ -37,12 +37,12 @@ def get_date_from_str(day_month_year: str) -> datetime.date:
     return datetime.date(*reversed([int(x) for x in day_month_year.split("-")]))
 
 
-def get_day_data(entries):
+def get_day_data(values: Tuple[DayValues, ...]) -> Tuple[timedelta, str, str]:
     day_total_hours = timedelta(hours=0, minutes=0)
     blocks_str = ""
     msg = ""
 
-    for block in entries:
+    for block in values:
 
         if isinstance(block, str):
             msg += block
@@ -72,7 +72,7 @@ def get_day_data(entries):
     return day_total_hours, blocks_str, msg
 
 
-def delta_to_time(delta):
+def delta_to_time(delta: timedelta) -> str:
 
     total_seconds = int(delta.total_seconds())
 
@@ -130,10 +130,10 @@ class State:
     contract_total_hours = timedelta(hours=0, minutes=0)
     contract_over_hours = timedelta(hours=0, minutes=0)
 
-    all_counted_dates = []
+    all_counted_dates: List[datetime.date] = dc_field(default_factory=list)
 
 
-def print_contract_result(entry: EmploymentContract):
+def print_contract_result(entry: EmploymentContract) -> None:
     week_target_str = delta_to_time(entry.hours_per_week)
     a = f"{C.RED_TYPE}Contract{C.RS}"
     h = f"{C.GREY}Hours/Week:{C.TIME}{week_target_str}{C.RS}"
@@ -141,7 +141,7 @@ def print_contract_result(entry: EmploymentContract):
     print(f"{a} {h} {v}")
 
 
-def print_balance_result(entry: Balance):
+def print_balance_result(entry: Balance) -> None:
     a = f"{C.RED_TYPE}Balance {C.GREY}"
     s = ""
     if entry.raise_week_target_by_days:
@@ -160,7 +160,7 @@ def print_balance_result(entry: Balance):
 
 
 def print_day_result(day: InternalDay, entry: Day) -> None:
-    if isinstance(entry, Holiday):
+    if isinstance(entry, HoliDay):
         a = f"{C.HOLIDAY}HoliDay {C.RS}"
     elif isinstance(entry, VacationDay):
         a = f"{C.VACADAY}VacaDay {C.RS}"
@@ -199,12 +199,11 @@ def print_month_result(day: InternalDay, state: State) -> None:
     print(f"{a} {m} {n} {t} {o}")
 
 
-def print_last_week_result(last_day: InternalDay, state: State):
+def print_last_week_result(last_day: InternalDay, state: State) -> None:
     n = (
         f"\n{C.ITALIC}{C.GREY_DA}Note: \n"
-        + f"* We count over hours after each completed week.\n"
-        + f"  Over hours for current week should not be included in other stats.\n"
-        + f"* Holidays, VacationDays, etc. reduce the week target.{C.RS}\n"
+        + f"* Over hours for the 'Current Week' are not included in other stats.\n"
+        + f"* Holidays, VacationDays, SickDays, etc. reduce the week target hours.{C.RS}\n"
     )
     a = f"\n= After Week {last_day.week_number - 1} = \n"
     r = [
@@ -220,14 +219,14 @@ def print_last_week_result(last_day: InternalDay, state: State):
     print(f"{n}{a}{rr}")
 
 
-def print_current_week_result(last_day: InternalDay, state):
+def print_current_week_result(last_day: InternalDay, state) -> None:
     a = f"\n{C.RS}= Current Week {last_day.week_number} =\n"
     b = f"{C.GREY}This Week Total: {C.TIME}{delta_to_time(state.week_total_hours)} h\n"
     c = f"{C.GREY}This Week Over : {C.OVER}{delta_to_time(state.week_over_hours)} h"
     print(f"{a}{b}{c}")
 
 
-def print_date_exists_error(date):
+def print_date_exists_error(date: datetime.date) -> None:
     m = f"{C.ERROR}ERROR: Same date used multiple times: {date}{C.RS}"
     print(m)
     sys.exit(1)
@@ -289,7 +288,7 @@ def process(entries: List[Entry]) -> None:
 
             blocks_str = ""
             date = get_date_from_str(entry.date_str)
-            day_total_hours, blocks_str, msg = get_day_data(entry.args)
+            day_total_hours, blocks_str, msg = get_day_data(entry.values)
 
             cur_day = InternalDay(
                 date=date,
@@ -352,7 +351,7 @@ def process(entries: List[Entry]) -> None:
                 state.year_total_hours = timedelta(hours=0, minutes=0)
                 state.year_over_hours = timedelta(hours=0, minutes=0)
 
-            if isinstance(entry, (Holiday, VacationDay, SickDay)):
+            if isinstance(entry, (HoliDay, VacationDay, SickDay)):
                 state.week_target_hours = (
                     state.week_target_hours - state.contract_hours_per_workday
                 )

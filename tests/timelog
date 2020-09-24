@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+import sys
+
+sys.path.append("../timecount")
+
+from timecount import process
+from timecount.tctypes import (
+    EmploymentContract,
+    Balance,
+    Day,
+    HoliDay,
+    SickDay,
+    VacationDay,
+)
+
+# fmt: off
+entries = [
+    EmploymentContract(begin="01-04-2020", hours_per_week=30, vacation_days_per_year=29),
+    Balance(remove_vacation_days=7, note="Contract starts with April, thus remove 3 Month."),
+    Balance(reduce_week_target_by_days=2, note="You need to balance for two work days here, because you start in the middle of the week."),
+
+    Day("01-04-2020", (12.30, 20.00), (20.30, 01.15), "Configure Workstation"),
+    Day("02-04-2020", (14.30, 00.30), "Configure Workstation"),
+    Day("03-04-2020", (10.30, 15.00), "Configure Workstation"),
+    Day("06-04-2020", (10.00, 14.30), (17.00, 22.15) , "Pair Programming Daniel."),
+    
+    Day("07-04-2020", (10.30, 14.30), (15.30, 21.45) , "Pair Programming Daniel."),
+    Day("08-04-2020", (09.30, 14.30), (15.00, 19.15) , "BrowserStack validation; Laptop setup."),
+    Day("09-04-2020", (11.00, 15.00), (19.30, 22.00) , "BrowserStack device list; Meeting; Try test automation."),
+    HoliDay("10-04-2020", (12.00, 13.00), "Karfreitag; Tooling"),
+    Day("11-04-2020", (11.00, 14.00), (21.15, 00.00), "Tooling, BrowserStack Testing."),
+    Day("12-04-2020", (11.15, 13.15), "System Setup; Tooling;"),
+
+    HoliDay("13-04-2020", (11.00, 16.00), "Ostermontag; Slack Channel Catchup; System Setup; Tooling"),
+    Day("14-04-2020", (11.00, 14.00), (15.30, 18.30), "Tooling; SlackMeetings; BrowserStack;"),
+    Day("15-04-2020", (10.30, 14.15), (15.30, 19.30), "BrowserStack Issue Support; Learn App-Automate-Appium; PR Fix gatsby issue with Nico;"),
+    Day("16-04-2020", (11.15, 17.00), (18.00, 21.00), "#624; Android Emulator Configuring; Fix issue with autokey;"),
+    Day("17-04-2020", (10.00, 13.00), (15.15, 20.30), (22.00, 01.00), "Android Emulator Configuring Done; PR #652;"),
+    Day("18-04-2020", (21.15, 22.15), "PR #652 Review;"),
+    Day("19-04-2020", (12.00, 19.00), "#608 PR;"),
+    # Balance(reduce_week_target_by_days=2, note="You need to balance for two work days here, because you start in the middle of the week."),
+
+    Day("20-04-2020", (10.45, 19.30), "useDimension;"),
+    Day("21-04-2020", (13.45, 14.45), (17.45, 18.45), "useDimensions"),
+    Day("22-04-2020", (12.00, 19.00), "useDimensions"),
+    Day("23-04-2020", (11.00, 14.15), (15.00, 19.00), (19.30, 23.45), "useDimensions"),
+    Day("24-04-2020", (12.00, 18.45), (20.15, 00.00), "useDimensions; Tickets; Screenshots;"),
+    Day("25-04-2020", (11.00, 16.30), (18.15, 23.00), "useDimensions; Tickets; Screenshots;"),
+    Day("26-04-2020", (17.00, 05.00), "useDimensions; Tickets; Screenshots;"),
+
+    Day("27-04-2020", (13.00, 17.30), (18.00, 00.00), "useDimensions; Tickets; Screenshots;"),
+    Day("28-04-2020", (16.00, 22.00), "Screenshots;"),
+    Day("29-04-2020", (11.30, 16.30), (17.45, 20.15), "Screenshots;"),
+    Day("30-04-2020", (11.15, 16.00), "Screenshots;"),
+    HoliDay("01-05-2020", "Tag Der Arbeit"),
+
+    Day("04-05-2020", (10.00, 19.15), "Screenshots; Anamnesis Planung;"),
+    Day("05-05-2020", (10.00, 14.00), (15.30, 19.15) ,"Screenshots Bug;"),
+    Day("06-05-2020", (10.15, 14.00), (15.30, 20.00) ,"Screenshots;"),
+    Day("07-05-2020", (10.15, 13.45), (15.30, 20.00), "Screenshots;"),
+    Day("08-05-2020", (10.45, 16.45), "Screenshots;"),
+    VacationDay("09-05-2020", "Tag Der Arbeit"),
+    # WE
+    Day("11-05-2020", (11.00, 21.30), "Screenshots;"),
+    Day("12-05-2020", (11.15, 13.30), "Screenshots;"),
+    SickDay("13-05-2020", "Grippe"),
+
+
+]
+
+process(entries)

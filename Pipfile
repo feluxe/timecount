@@ -7,7 +7,6 @@ verify_ssl = true
 black = "*"
 mypy = "*"
 setuptools = "==41.0.1"
-buildlib = "==2.3.5"
 
 [packages]
 
