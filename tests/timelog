@@ -3,6 +3,7 @@ import sys
 
 sys.path.append("../timecount")
 
+
 from timecount import process
 from timecount.tctypes import (
     EmploymentContract,
@@ -15,7 +16,7 @@ from timecount.tctypes import (
 
 # fmt: off
 entries = [
-    EmploymentContract(begin="01-04-2020", hours_per_week=30, vacation_days_per_year=29),
+    EmploymentContract(begin="01-04-2020", vacation_days_per_year=29, hours_per_week=30, workdays_per_week=4),
     Balance(remove_vacation_days=7, note="Contract starts with April, thus remove 3 Month."),
     Balance(reduce_week_target_by_days=2, note="You need to balance for two work days here, because you start in the middle of the week."),
 

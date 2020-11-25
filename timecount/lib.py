@@ -13,21 +13,29 @@ class C:
     GREY_DA = f"\x1b[38;2;{120};{120};{120}m"
     BLOCK = f"\x1b[38;2;{150};{130};{150}m"
     TIME = f"\x1b[38;2;{190};{140};{4}m"
-    OVER = f"\x1b[38;2;{252};{147};{4}m"
+    OVER_RED = f"\x1b[38;2;{184};{40};{41}m"
+    OVER_GREEN = f"\x1b[38;2;{84};{204};{30}m"
     DATE = f"\x1b[38;2;{150};{150};{150}m"
-    MONTH_NUM = "\033[96m"
-    WEEKNUM_DA = "\33[34m"
-    WEEKNUM_LI = "\33[94m"
+    # MONTH_SUM = f"\x1b[38;2;{40};{169};{119}m"
+    MONTH_SUM = f"\x1b[38;2;{169};{219};{255}m"
+    WEEK_SUM = "\033[96m"
+    # WEEK_NUM_DA = "\33[34m"
+    WEEK_NUM_DA = f"\x1b[38;2;{74};{119};{183}m"
+    WEEK_NUM_LI = "\33[94m"
 
     RED_TYPE = f"\x1b[38;2;{200};{50};{4}m"
-    HOLIDAY = f"\x1b[38;2;{70};{160};{70}m"
-    VACADAY = f"\x1b[38;2;{30};{160};{160}m"
-    SICKDAY = f"\x1b[38;2;{230};{120};{50}m"
+    # HOLIDAY = f"\x1b[38;2;{70};{160};{70}m"
+    HOLIDAY = f"\x1b[38;2;{190};{215};{35}m"
+    # VACADAY = f"\x1b[38;2;{30};{160};{160}m"
+    VACADAY = f"\x1b[38;2;{40};{193};{40}m"
+    SICKDAY = f"\x1b[38;2;{230};{93};{28}m"
 
     ERROR = f"\x1b[38;2;{250};{100};{4}m"
     ITALIC = "\33[3m"
 
-    RS = "\033[0m"
+    UL = "\033[4m"
+    RS = "\033[39m"
+    RS_ALL = "\033[0m"
 
 
 def get_date_from_str(day_month_year: str) -> datetime.date:
@@ -72,7 +80,7 @@ def get_day_data(values: Tuple[DayValues, ...]) -> Tuple[timedelta, str, str]:
     return day_total_hours, blocks_str, msg
 
 
-def delta_to_time(delta: timedelta) -> str:
+def delta_to_str(delta: timedelta) -> str:
 
     total_seconds = int(delta.total_seconds())
 
@@ -134,11 +142,14 @@ class State:
 
 
 def print_contract_result(entry: EmploymentContract) -> None:
-    week_target_str = delta_to_time(entry.hours_per_week)
+    week_target_str = delta_to_str(entry.hours_per_week)
     a = f"{C.RED_TYPE}Contract{C.RS}"
     h = f"{C.GREY}Hours/Week:{C.TIME}{week_target_str}{C.RS}"
+    d = f"{C.GREY}Hours/WorkDay:{C.TIME}{entry.hours_per_workday}{C.RS}"
+    w = f"{C.GREY}Workdays/Week:{C.TIME}{entry.workdays_per_week}{C.RS}"
     v = f"{C.GREY}VacationDays:{C.TIME}{entry.vacation_days_per_year}{C.RS}"
-    print(f"{a} {h} {v}")
+    print(f"{a} {h} {d} {w} {v}")
+    print()
 
 
 def print_balance_result(entry: Balance) -> None:
@@ -169,7 +180,7 @@ def print_day_result(day: InternalDay, entry: Day) -> None:
     elif isinstance(entry, Day):
         a = f"{C.GREY}Day     {C.RS}"
 
-    col = C.WEEKNUM_LI if (day.week_number % 2 == 0) else C.WEEKNUM_DA
+    col = C.WEEK_NUM_LI if (day.week_number % 2 == 0) else C.WEEK_NUM_DA
     w = f"{col}W{day.week_number:02d}{C.RS}"
     m = f"{col}{day.month_name[0:3]}{C.RS}"
     t = f"{C.TIME}{day.day_total_str}{C.RS}"
@@ -180,23 +191,42 @@ def print_day_result(day: InternalDay, entry: Day) -> None:
     print(f"{a} {w} {m} {d} {n} {t} {b} {s}")
 
 
+def fmt_over_hours(delta):
+    time_str = delta_to_str(delta)
+    return f"{C.OVER_RED if time_str[0] == '-' else C.OVER_GREEN}{time_str}"
+
+
 def print_week_result(day: InternalDay, state: State) -> None:
-    a = f"{C.GREY}Week    {C.RS}"
-    col = C.WEEKNUM_LI if (day.week_number % 2 == 0) else C.WEEKNUM_DA
+    # a = f"{C.WEEK_SUM}Week    {C.RS}"
+    col = C.WEEK_NUM_LI if (day.week_number % 2 == 0) else C.WEEK_NUM_DA
+    a = f"{col}Week    {C.RS}"
+    # col = C.WEEK_SUM
+    # col = C.WEEK_SUM
     w = f"{col}W{day.week_number:02d}{C.RS}"
     m = f"{col}{day.month_name[0:3]}{C.RS}"
-    t = f"{C.GREY}Total: {C.TIME}{delta_to_time(state.week_total_hours)}{C.RS}"
-    o = f"{C.GREY}Over: {C.OVER}{delta_to_time(state.week_over_hours)}{C.RS}"
-    print(f"{a} {w} {m} {t}{C.GREY} {o}")
+    # t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.week_total_hours)}{C.RS}"
+    t = f"{col}Total: {C.TIME}{delta_to_str(state.week_total_hours)}{C.RS}"
+    # o = f"{C.GREY}Over: {C.OVER}{delta_to_str(state.week_over_hours)}{C.RS}"
+    o = f"{col}Over: {fmt_over_hours(state.week_over_hours)}"
+    # print(f"{C.UL}{a} {w} {m} {t}{C.GREY} {o}{C.RS_ALL}")
+    wt = f"{col}Target: {C.TIME}{delta_to_str(state.week_target_hours)}{C.RS}"
+    print(f"{a} {w} {m} {wt} {t}{col} {o}{C.RS_ALL}")
+    print()
 
 
 def print_month_result(day: InternalDay, state: State) -> None:
-    a = f"{C.GREY}Month   {C.RS}"
-    m = f"{C.MONTH_NUM}M{day.month_number:02d}{C.RS}"
-    n = f"{C.MONTH_NUM}{day.month_name[0:3]}{C.RS}"
-    t = f"{C.GREY}Total: {C.TIME}{delta_to_time(state.month_total_hours)}{C.RS}"
-    o = f"{C.GREY}Over: {C.OVER}{delta_to_time(state.month_over_hours)}{C.RS}"
-    print(f"{a} {m} {n} {t} {o}")
+    a = f"{C.MONTH_SUM}Month   {C.RS}"
+    m = f"{C.MONTH_SUM}M{day.month_number:02d}{C.RS}"
+    n = f"{C.MONTH_SUM}{day.month_name[0:3]}{C.RS}"
+    # t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
+    th = f"{C.MONTH_SUM}ContractHours: {C.TIME}{delta_to_str(state.contract_total_hours)}{C.RS}"
+    mh = f"{C.MONTH_SUM}MonthHours: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
+    # o = f"{C.GREY}Over: {C.OVER}{delta_to_str(state.month_over_hours)}{C.RS}"
+    to = f"{C.MONTH_SUM}ContractOver: {fmt_over_hours(state.contract_over_hours)}"
+    mo = f"{C.MONTH_SUM}MonthOver: {fmt_over_hours(state.month_over_hours)}"
+    print()
+    print(f"{a} {m} {n} {th} {mh} {to} {mo}{C.RS_ALL}")
+    print()
 
 
 def print_last_week_result(last_day: InternalDay, state: State) -> None:
@@ -208,22 +238,23 @@ def print_last_week_result(last_day: InternalDay, state: State) -> None:
     a = f"\n= After Week {last_day.week_number - 1} = \n"
     r = [
         f"{C.GREY}Vacation Left : {C.TIME}{state.vacation_days_left} d",
-        f"{C.GREY}Contract Total: {C.TIME}{delta_to_time(state.contract_total_hours)} h",
-        f"{C.GREY}Contract Over : {C.OVER}{delta_to_time(state.contract_over_hours)} h",
-        f"{C.GREY}Year Total    : {C.TIME}{delta_to_time(state.year_total_hours)} h",
-        f"{C.GREY}Year Over     : {C.OVER}{delta_to_time(state.year_over_hours)} h",
-        f"{C.GREY}Month Total   : {C.TIME}{delta_to_time(state.month_total_hours)} h",
-        f"{C.GREY}Month Over    : {C.OVER}{delta_to_time(state.month_over_hours)} h",
+        f"{C.GREY}Contract Total: {C.TIME}{delta_to_str(state.contract_total_hours)} h",
+        f"{C.GREY}Contract Over : {fmt_over_hours(state.contract_over_hours)} h",
+        f"{C.GREY}Year Total    : {C.TIME}{delta_to_str(state.year_total_hours)} h",
+        f"{C.GREY}Year Over     : {fmt_over_hours(state.year_over_hours)} h",
+        f"{C.GREY}Month Total   : {C.TIME}{delta_to_str(state.month_total_hours)} h",
+        f"{C.GREY}Month Over    : {fmt_over_hours(state.month_over_hours)} h",
     ]
     rr = "\n".join(r)
     print(f"{n}{a}{rr}")
 
 
-def print_current_week_result(last_day: InternalDay, state) -> None:
+def print_current_week_result(last_day: InternalDay, state: State) -> None:
     a = f"\n{C.RS}= Current Week {last_day.week_number} =\n"
-    b = f"{C.GREY}This Week Total: {C.TIME}{delta_to_time(state.week_total_hours)} h\n"
-    c = f"{C.GREY}This Week Over : {C.OVER}{delta_to_time(state.week_over_hours)} h"
-    print(f"{a}{b}{c}")
+    d = f"{C.GREY}This Week Target: {C.TIME}{delta_to_str(state.week_target_hours)} h\n"
+    b = f"{C.GREY}This Week Worked: {C.TIME}{delta_to_str(state.week_total_hours)} h\n"
+    c = f"{C.GREY}This Week Over : {fmt_over_hours(state.week_over_hours)} h"
+    print(f"{a}{d}{b}{c}")
 
 
 def print_date_exists_error(date: datetime.date) -> None:
@@ -292,7 +323,7 @@ def process(entries: List[Entry]) -> None:
 
             cur_day = InternalDay(
                 date=date,
-                day_total_str=delta_to_time(day_total_hours),
+                day_total_str=delta_to_str(day_total_hours),
                 day_total_hours=day_total_hours,
                 blocks_str=blocks_str,
                 msg=msg,

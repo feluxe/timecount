@@ -8,14 +8,27 @@ class Entry:
     pass
 
 
+# TODO Use
+# vacation_day_value: int
+# sick_day_value: int
+# holiday_value: int
+# ...
+# This way you can use:
+# 30/5 for SickDay, HoliDay, etc.
+# 30/4 for VacationDay
 class EmploymentContract(Entry):
     def __init__(
-        self, begin: str, hours_per_week: int, vacation_days_per_year: int,
+        self,
+        begin: str,
+        vacation_days_per_year: int,
+        hours_per_week: int,
+        workdays_per_week: int,
     ):
         self.begin = begin
         self.vacation_days_per_year = vacation_days_per_year
+        self.workdays_per_week = workdays_per_week
         self.hours_per_week = timedelta(hours=hours_per_week)
-        self.hours_per_workday = timedelta(hours=hours_per_week / 5)
+        self.hours_per_workday = timedelta(hours=hours_per_week / workdays_per_week)
 
 
 @dataclass
