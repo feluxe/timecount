@@ -14,7 +14,7 @@ class C:
     BLOCK = f"\x1b[38;2;{150};{130};{150}m"
     TIME = f"\x1b[38;2;{190};{140};{4}m"
     OVER_RED = f"\x1b[38;2;{184};{40};{41}m"
-    OVER_GREEN = f"\x1b[38;2;{84};{204};{30}m"
+    OVER_GREEN = f"\x1b[38;2;{88};{174};{49}m"
     DATE = f"\x1b[38;2;{150};{150};{150}m"
     # MONTH_SUM = f"\x1b[38;2;{40};{169};{119}m"
     MONTH_SUM = f"\x1b[38;2;{169};{219};{255}m"
@@ -185,7 +185,7 @@ def print_day_result(day: InternalDay, entry: Day) -> None:
     m = f"{col}{day.month_name[0:3]}{C.RS}"
     t = f"{C.TIME}{day.day_total_str}{C.RS}"
     d = f"{C.DATE}{day.date}{C.RS}"
-    n = f"{C.GREY}{day.week_day_name[0:3]}{C.RS}"
+    n = f"{col}{day.week_day_name[0:3]}{C.RS}"
     b = f"{C.BLOCK}{day.blocks_str}{C.RS}"
     s = day.msg
     print(f"{a} {w} {m} {d} {n} {t} {b} {s}")
@@ -205,11 +205,11 @@ def print_week_result(day: InternalDay, state: State) -> None:
     w = f"{col}W{day.week_number:02d}{C.RS}"
     m = f"{col}{day.month_name[0:3]}{C.RS}"
     # t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.week_total_hours)}{C.RS}"
-    t = f"{col}Total: {C.TIME}{delta_to_str(state.week_total_hours)}{C.RS}"
+    t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.week_total_hours)}{C.RS}"
     # o = f"{C.GREY}Over: {C.OVER}{delta_to_str(state.week_over_hours)}{C.RS}"
-    o = f"{col}Over: {fmt_over_hours(state.week_over_hours)}"
+    o = f"{C.GREY}Over: {fmt_over_hours(state.week_over_hours)}"
     # print(f"{C.UL}{a} {w} {m} {t}{C.GREY} {o}{C.RS_ALL}")
-    wt = f"{col}Target: {C.TIME}{delta_to_str(state.week_target_hours)}{C.RS}"
+    wt = f"{C.GREY}Target: {C.TIME}{delta_to_str(state.week_target_hours)}{C.RS}"
     print(f"{a} {w} {m} {wt} {t}{col} {o}{C.RS_ALL}")
     print()
 
@@ -219,11 +219,11 @@ def print_month_result(day: InternalDay, state: State) -> None:
     m = f"{C.MONTH_SUM}M{day.month_number:02d}{C.RS}"
     n = f"{C.MONTH_SUM}{day.month_name[0:3]}{C.RS}"
     # t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
-    th = f"{C.MONTH_SUM}ContractHours: {C.TIME}{delta_to_str(state.contract_total_hours)}{C.RS}"
-    mh = f"{C.MONTH_SUM}MonthHours: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
+    th = f"{C.GREY}ContractHours: {C.TIME}{delta_to_str(state.contract_total_hours)}{C.RS}"
+    mh = f"{C.GREY}MonthHours: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
     # o = f"{C.GREY}Over: {C.OVER}{delta_to_str(state.month_over_hours)}{C.RS}"
-    to = f"{C.MONTH_SUM}ContractOver: {fmt_over_hours(state.contract_over_hours)}"
-    mo = f"{C.MONTH_SUM}MonthOver: {fmt_over_hours(state.month_over_hours)}"
+    to = f"{C.GREY}ContractOver: {fmt_over_hours(state.contract_over_hours)}"
+    mo = f"{C.GREY}MonthOver: {fmt_over_hours(state.month_over_hours)}"
     print()
     print(f"{a} {m} {n} {th} {mh} {to} {mo}{C.RS_ALL}")
     print()
