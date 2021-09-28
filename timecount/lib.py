@@ -1,8 +1,10 @@
-from dataclasses import dataclass, field as dc_field
-import sys
 import datetime
+import sys
+from dataclasses import dataclass
+from dataclasses import field as dc_field
 from datetime import timedelta
 from typing import List, Optional, Tuple
+
 from .tctypes import *
 
 WEEKS_PER_YEAR = 52.1429
@@ -122,8 +124,8 @@ class State:
         hours=0, minutes=0
     )  # workday = Mon,Tue,Wed,Thu,Fri
 
-    vacation_days_per_year = 0
-    vacation_days_left = 0
+    vacation_days_per_year = 0.0
+    vacation_days_left = 0.0
 
     week_target_hours = timedelta(hours=0, minutes=0)
     week_total_hours = timedelta(hours=0, minutes=0)
@@ -224,8 +226,9 @@ def print_month_result(day: InternalDay, state: State) -> None:
     # o = f"{C.GREY}Over: {C.OVER}{delta_to_str(state.month_over_hours)}{C.RS}"
     to = f"{C.GREY}ContractOver: {fmt_over_hours(state.contract_over_hours)}"
     mo = f"{C.GREY}MonthOver: {fmt_over_hours(state.month_over_hours)}"
+    va = f"{C.GREY}VacaDays: {C.TIME}{state.vacation_days_left}{C.RS}"
     print()
-    print(f"{a} {m} {n} {th} {mh} {to} {mo}{C.RS_ALL}")
+    print(f"{a} {m} {n} {th} {mh} {to} {mo} {va}{C.RS_ALL}")
     print()
 
 
@@ -280,7 +283,10 @@ def process(entries: List[Entry]) -> None:
             state.contract_begin = get_date_from_str(entry.begin)
             state.contract_hours_per_week = entry.hours_per_week
             state.contract_hours_per_workday = entry.hours_per_workday
-            state.vacation_days_left = entry.vacation_days_per_year
+            state.vacation_days_per_year = entry.vacation_days_per_year
+            state.vacation_days_left = (
+                entry.vacation_days_per_year + state.vacation_days_left
+            )
 
             state.week_target_hours = entry.hours_per_week
 
@@ -381,11 +387,20 @@ def process(entries: List[Entry]) -> None:
                 # Reset year counters
                 state.year_total_hours = timedelta(hours=0, minutes=0)
                 state.year_over_hours = timedelta(hours=0, minutes=0)
+                state.vacation_days_left = (
+                    state.vacation_days_left + state.vacation_days_per_year
+                )
 
             if isinstance(entry, (HoliDay, VacationDay, SickDay)):
                 state.week_target_hours = (
                     state.week_target_hours - state.contract_hours_per_workday
                 )
+
+            if isinstance(entry, (HoliDayHalf, VacationDayHalf, SickDayHalf)):
+                state.week_target_hours = (
+                    state.week_target_hours - state.contract_hours_per_workday
+                )
+
 
             if isinstance(entry, VacationDay):
                 state.vacation_days_left = state.vacation_days_left - 1
