@@ -1,7 +1,6 @@
-from datetime import timedelta
 from dataclasses import dataclass
-
-from typing import Union, List, Tuple
+from datetime import timedelta
+from typing import List, Tuple, Union
 
 
 class Entry:
@@ -39,6 +38,8 @@ class Balance(Entry):
     raise_week_target_by_days: int = 0
     add_vacation_days: int = 0
     remove_vacation_days: int = 0
+    add_contract_over_hours: int = 0
+    remove_contract_over_hours: int = 0
     note: str = ""
 
 
@@ -59,12 +60,30 @@ class HoliDay(Day):
 
 
 @dataclass
+class HoliDayHalf(Day):
+    def __init__(self, date_str: str, *values: DayValues):
+        super().__init__(date_str, *values)
+
+
+@dataclass
 class SickDay(Day):
     def __init__(self, date_str: str, *values: DayValues):
         super().__init__(date_str, *values)
 
 
 @dataclass
+class SickDayHalf(Day):
+    def __init__(self, date_str: str, *values: DayValues):
+        super().__init__(date_str, *values)
+
+
+@dataclass
 class VacationDay(Day):
+    def __init__(self, date_str: str, *values: DayValues):
+        super().__init__(date_str, *values)
+
+
+@dataclass
+class VacationDayHalf(Day):
     def __init__(self, date_str: str, *values: DayValues):
         super().__init__(date_str, *values)

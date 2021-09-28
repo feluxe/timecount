@@ -149,13 +149,13 @@ def print_contract_result(entry: EmploymentContract) -> None:
     h = f"{C.GREY}Hours/Week:{C.TIME}{week_target_str}{C.RS}"
     d = f"{C.GREY}Hours/WorkDay:{C.TIME}{entry.hours_per_workday}{C.RS}"
     w = f"{C.GREY}Workdays/Week:{C.TIME}{entry.workdays_per_week}{C.RS}"
-    v = f"{C.GREY}VacationDays:{C.TIME}{entry.vacation_days_per_year}{C.RS}"
+    v = f"{C.GREY}VacationDays/Year:{C.TIME}{entry.vacation_days_per_year}{C.RS}"
     print(f"{a} {h} {d} {w} {v}")
     print()
 
 
 def print_balance_result(entry: Balance) -> None:
-    a = f"{C.RED_TYPE}Balance {C.GREY}"
+    a = f"{C.RED_TYPE}Balance    {C.GREY}"
     s = ""
     if entry.raise_week_target_by_days:
         s += f"raiseWeekTargetByDays:{C.TIME}{entry.raise_week_target_by_days}"
@@ -169,18 +169,29 @@ def print_balance_result(entry: Balance) -> None:
         s += f"addVacationDays:{C.TIME}{entry.add_vacation_days}"
     if entry.remove_vacation_days:
         s += f"removeVacationDays:{C.TIME}{entry.remove_vacation_days}"
+    if entry.add_contract_over_hours:
+        s += f"addContractOverHours:{C.TIME}{entry.add_contract_over_hours}"
+    if entry.remove_contract_over_hours:
+        s += f"removeContractOverHours:{C.TIME}{entry.remove_contract_over_hours}"
+
     print(f"{a} {s}{C.RS} {entry.note}")
 
 
 def print_day_result(day: InternalDay, entry: Day) -> None:
     if isinstance(entry, HoliDay):
-        a = f"{C.HOLIDAY}HoliDay {C.RS}"
+        a = f"{C.HOLIDAY}HoliDay    {C.RS}"
+    elif isinstance(entry, HoliDayHalf):
+        a = f"{C.HOLIDAY}HoliDayHalf{C.RS}"
     elif isinstance(entry, VacationDay):
-        a = f"{C.VACADAY}VacaDay {C.RS}"
+        a = f"{C.VACADAY}VacaDay    {C.RS}"
+    elif isinstance(entry, VacationDayHalf):
+        a = f"{C.VACADAY}VacaDayHalf{C.RS}"
     elif isinstance(entry, SickDay):
-        a = f"{C.SICKDAY}SickDay {C.RS}"
+        a = f"{C.SICKDAY}SickDay    {C.RS}"
+    elif isinstance(entry, SickDayHalf):
+        a = f"{C.SICKDAY}SickDayHalf{C.RS}"
     elif isinstance(entry, Day):
-        a = f"{C.GREY}Day     {C.RS}"
+        a = f"{C.GREY}Day        {C.RS}"
 
     col = C.WEEK_NUM_LI if (day.week_number % 2 == 0) else C.WEEK_NUM_DA
     w = f"{col}W{day.week_number:02d}{C.RS}"
@@ -201,7 +212,7 @@ def fmt_over_hours(delta):
 def print_week_result(day: InternalDay, state: State) -> None:
     # a = f"{C.WEEK_SUM}Week    {C.RS}"
     col = C.WEEK_NUM_LI if (day.week_number % 2 == 0) else C.WEEK_NUM_DA
-    a = f"{col}Week    {C.RS}"
+    a = f"{col}Week       {C.RS}"
     # col = C.WEEK_SUM
     # col = C.WEEK_SUM
     w = f"{col}W{day.week_number:02d}{C.RS}"
@@ -217,7 +228,7 @@ def print_week_result(day: InternalDay, state: State) -> None:
 
 
 def print_month_result(day: InternalDay, state: State) -> None:
-    a = f"{C.MONTH_SUM}Month   {C.RS}"
+    a = f"{C.MONTH_SUM}Month      {C.RS}"
     m = f"{C.MONTH_SUM}M{day.month_number:02d}{C.RS}"
     n = f"{C.MONTH_SUM}{day.month_name[0:3]}{C.RS}"
     # t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
@@ -227,9 +238,24 @@ def print_month_result(day: InternalDay, state: State) -> None:
     to = f"{C.GREY}ContractOver: {fmt_over_hours(state.contract_over_hours)}"
     mo = f"{C.GREY}MonthOver: {fmt_over_hours(state.month_over_hours)}"
     va = f"{C.GREY}VacaDays: {C.TIME}{state.vacation_days_left}{C.RS}"
-    print()
+    # print()
     print(f"{a} {m} {n} {th} {mh} {to} {mo} {va}{C.RS_ALL}")
     print()
+
+
+def print_year_result(day: InternalDay, state: State) -> None:
+    a = f"{C.MONTH_SUM}Year       {C.RS}"
+    m = f"{C.MONTH_SUM}Y{day.year_number:02d}{C.RS}  "
+    # t = f"{C.GREY}Total: {C.TIME}{delta_to_str(state.month_total_hours)}{C.RS}"
+    th = f"{C.GREY}ContractHours: {C.TIME}{delta_to_str(state.contract_total_hours)}{C.RS}"
+    mh = f"{C.GREY}YearHours: {C.TIME}{delta_to_str(state.year_total_hours)}{C.RS}"
+    # o = f"{C.GREY}Over: {C.OVER}{delta_to_str(state.month_over_hours)}{C.RS}"
+    to = f"{C.GREY}ContractOver: {fmt_over_hours(state.contract_over_hours)}"
+    mo = f"{C.GREY}YearOver: {fmt_over_hours(state.year_over_hours)}"
+    va = f"{C.GREY}VacaDays: {C.TIME}{state.vacation_days_left}{C.RS}"
+    print()
+    print(f"{a} {m} {th} {mh} {to} {mo} {va}{C.RS_ALL}")
+    print("\n\n")
 
 
 def print_last_week_result(last_day: InternalDay, state: State) -> None:
@@ -317,6 +343,16 @@ def process(entries: List[Entry]) -> None:
                 state.contract_hours_per_workday * entry.raise_week_target_by_days
             )
 
+            if entry.add_contract_over_hours:
+                state.contract_over_hours = state.contract_over_hours + timedelta(
+                    hours=entry.add_contract_over_hours
+                )
+
+            if entry.remove_contract_over_hours:
+                state.contract_over_hours = state.contract_over_hours - timedelta(
+                    hours=entry.remove_contract_over_hours
+                )
+
             print_balance_result(entry)
 
             continue
@@ -344,9 +380,11 @@ def process(entries: List[Entry]) -> None:
 
             # Check if date exists
             if cur_day.date in state.all_counted_dates:
-                print_date_exists_error(cur_day.date)
-            else:
-                state.all_counted_dates.append(cur_day.date)
+                # Do not check in case of "Half" Days
+                if not isinstance(entry, (VacationDayHalf, HoliDayHalf, SickDayHalf)):
+                    print_date_exists_error(cur_day.date)
+
+            state.all_counted_dates.append(cur_day.date)
 
             # On current day is new week
             if last_day and cur_day.week_number != last_day.week_number:
@@ -379,14 +417,13 @@ def process(entries: List[Entry]) -> None:
             # On current day is new year
             if last_day and cur_day.year_number != last_day.year_number:
 
-                # TODO: Log year and reset year counters
-
                 # Print Log for last year
-                # print_year_result(last_day, state)
+                print_year_result(last_day, state)
 
                 # Reset year counters
                 state.year_total_hours = timedelta(hours=0, minutes=0)
                 state.year_over_hours = timedelta(hours=0, minutes=0)
+
                 state.vacation_days_left = (
                     state.vacation_days_left + state.vacation_days_per_year
                 )
@@ -397,13 +434,15 @@ def process(entries: List[Entry]) -> None:
                 )
 
             if isinstance(entry, (HoliDayHalf, VacationDayHalf, SickDayHalf)):
-                state.week_target_hours = (
-                    state.week_target_hours - state.contract_hours_per_workday
+                state.week_target_hours = state.week_target_hours - (
+                    state.contract_hours_per_workday / 2
                 )
-
 
             if isinstance(entry, VacationDay):
                 state.vacation_days_left = state.vacation_days_left - 1
+
+            if isinstance(entry, VacationDayHalf):
+                state.vacation_days_left = state.vacation_days_left - 0.5
 
             print_day_result(cur_day, entry)
 
